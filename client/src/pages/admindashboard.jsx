@@ -73,6 +73,40 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleDelete(id) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("No token found. Please log in as admin.");
+    return;
+  }
+
+  try {
+    const url = `http://localhost:5000/api/candidate/${id}`; // ✅ fixed route
+    console.log("🧩 DELETE request to:", url);
+
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    console.log("🧩 DELETE response:", data);
+
+    if (res.ok && data.success) {
+      alert("✅ Candidate deleted successfully!");
+      await loadAll(); // refresh list
+    } else {
+      alert(`❌ ${data.message || "Failed to delete candidate"}`);
+    }
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Error deleting candidate");
+  }
+}
+
   const sortedResults = (results || []).slice().sort((a, b) => {
     const va = a.votes ?? a.voteCount ?? a.count ?? 0;
     const vb = b.votes ?? b.voteCount ?? b.count ?? 0;
@@ -195,6 +229,13 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-sm text-slate-500 mt-1">{c.party}</div>
                         <div className="mt-3 font-bold text-indigo-600">{c.voteCount || c.votes || 0} votes</div>
+                        {/* 🔽 Added delete button */}
+                        <button
+                          onClick={() => handleDelete(c._id)}
+                          className="mt-3 w-full px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </article>
                   ))}
